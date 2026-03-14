@@ -1,0 +1,139 @@
+{
+  "bayesian": {
+    "notebook": "c:\\Users\\Vaka Bela Jithendra\\OneDrive\\Desktop\\ML Algorithm Explorer\\Supervised Learning\\BayesianRegression\\energy-efficiency-bayesian-regression.ipynb",
+    "dataset": "df = pd.read_csv(\"/kaggle/input/eergy-efficiency-dataset/ENB2012_data.csv\")",
+    "target": "df_copy = df.copy()",
+    "features_dropped": [
+      "X = df.drop(columns=['Heating Load', 'Cooling Load'])"
+    ],
+    "imports": [
+      "for col in df_copy.columns:"
+    ]
+  },
+  "elasticnet": {
+    "notebook": "c:\\Users\\Vaka Bela Jithendra\\OneDrive\\Desktop\\ML Algorithm Explorer\\Supervised Learning\\ElasticNetRegression\\bike-sharing-elasticnet-regression.ipynb",
+    "dataset": "df = pd.read_csv(\"/kaggle/input/bike-sharing-dataset/hour.csv\")",
+    "target": "y = df['cnt']",
+    "features_dropped": [
+      "X = df.drop(['instant','dteday','casual','registered','cnt'], axis=1)",
+      "df.drop(columns=['dteday'], inplace=True)",
+      "X = df_copy.drop(columns=['cnt'])"
+    ],
+    "imports": [
+      "for col in X_encoded.columns:",
+      "mi_scores = pd.Series(mi, index=X_encoded.columns).sort_values(ascending=False)",
+      "feature_names = X_train.columns"
+    ]
+  },
+  "lasso": {
+    "notebook": "c:\\Users\\Vaka Bela Jithendra\\OneDrive\\Desktop\\ML Algorithm Explorer\\Supervised Learning\\LassoRegression\\video-game-sales-lasso-regression.ipynb",
+    "dataset": "df = pd.read_csv(\"/kaggle/input/videogamesales/vgsales.csv\")",
+    "target": "df_copy = df.copy()",
+    "features_dropped": [
+      "X = df_copy.drop(columns=['Global_Sales'])",
+      "X = df_copy.drop(columns=['Global_Sales'])"
+    ],
+    "imports": [
+      "for col in df.columns:",
+      "for col in df_copy.columns:",
+      "mi_scores = pd.Series(mi, index=X.columns).sort_values(ascending=False)"
+    ]
+  },
+  "linear": {
+    "notebook": "c:\\Users\\Vaka Bela Jithendra\\OneDrive\\Desktop\\ML Algorithm Explorer\\Supervised Learning\\LinearRegression\\House Price Prediction - Linear Regression.ipynb",
+    "dataset": "df = pd.read_csv(\"house-prices.csv\")  # must contain a 'price' column",
+    "target": "y = df['Price']",
+    "features_dropped": [
+      "X = df.drop(columns=['Price'])"
+    ],
+    "imports": [
+      "for col in df.columns:",
+      "sns.scatterplot(x=df[df.columns[0]], y=df['Price'], color='green')",
+      "plt.title(f\"{df.columns[0]} vs Price\")"
+    ]
+  },
+  "polynomial": {
+    "notebook": "c:\\Users\\Vaka Bela Jithendra\\OneDrive\\Desktop\\ML Algorithm Explorer\\Supervised Learning\\PolynomialRegression\\manufacturing-polynomial-regression.ipynb",
+    "dataset": "df = pd.read_csv(\"/kaggle/input/manufacturing-data-for-polynomial-regression/manufacturing.csv\")",
+    "target": "df_copy = df.copy()",
+    "features_dropped": [
+      "X = df.drop(columns=['Quality Rating'])"
+    ],
+    "imports": []
+  },
+  "randomforest": {
+    "notebook": "c:\\Users\\Vaka Bela Jithendra\\OneDrive\\Desktop\\ML Algorithm Explorer\\Supervised Learning\\RandomForestRegression\\car-price-prediction-randomforestregressor.ipynb",
+    "dataset": "df = pd.read_csv(\"/kaggle/input/car-price-prediction-dataset/cardekho.csv\")",
+    "target": "df_copy = df.copy()",
+    "features_dropped": [
+      "df.drop(columns=['name'], inplace=True)",
+      "X = df_copy.drop(columns=['selling_price'])"
+    ],
+    "imports": [
+      "for col in df_copy.columns:",
+      "if col in new_df.columns:",
+      "new_df = new_df[X_train.columns]"
+    ]
+  },
+  "ridge": {
+    "notebook": "c:\\Users\\Vaka Bela Jithendra\\OneDrive\\Desktop\\ML Algorithm Explorer\\Supervised Learning\\RidgeRegression\\CryptoCurrency Prediction - Ridge Regression.ipynb",
+    "dataset": "df = pd.read_csv(\"Cryptocurrencies_to_USD_default_day_2021-01-09.csv\")  # must contain a 'price' column",
+    "target": "y = df['close']",
+    "features_dropped": [
+      "df.drop(columns=['datetime', 'cryptocurrency', 'image_url', 'coin_name'], inplace=True)",
+      "X = df.drop(columns=['close'])"
+    ],
+    "imports": [
+      "for col in df.columns:",
+      "for col in df.columns:"
+    ]
+  },
+  "svr": {
+    "notebook": "c:\\Users\\Vaka Bela Jithendra\\OneDrive\\Desktop\\ML Algorithm Explorer\\Supervised Learning\\SupportVectorRegression\\Stock Price- Support Vector Regressor.ipynb",
+    "dataset": "df = pd.read_csv(\"/kaggle/input/google-stock-price-data-2020-2025-googl/googl_data_2020_2025.csv\")",
+    "target": "df_copy = df.copy()",
+    "features_dropped": [
+      "df.drop(columns=['Price'], inplace=True)",
+      "X = df_copy.drop(columns=['Adj Close'])"
+    ],
+    "imports": [
+      "for col in df.columns:"
+    ]
+  },
+  "adaboost": {
+    "notebook": "c:\\Users\\Vaka Bela Jithendra\\OneDrive\\Desktop\\ML Algorithm Explorer\\Supervised Learning\\AdaBoostRegression\\insurance-charges1-adaboost-regressor.ipynb",
+    "dataset": "df = pd.read_csv(\"/kaggle/input/insurance-csv/insurance.csv\")",
+    "target": "df_copy = df.copy()",
+    "features_dropped": [
+      "X = df_copy.drop(columns=['expenses'])"
+    ],
+    "imports": [
+      "for col in df_copy.columns:"
+    ]
+  },
+  "catboost": {
+    "notebook": "c:\\Users\\Vaka Bela Jithendra\\OneDrive\\Desktop\\ML Algorithm Explorer\\Supervised Learning\\CatGBMRegression\\advanced-house-price-catgbm.ipynb",
+    "dataset": "train_df = pd.read_csv(\"/kaggle/input/house-prices-advanced-regression-techniques/train.csv\")",
+    "target": "y = train_df['SalePrice']",
+    "features_dropped": [
+      "train_df.drop(columns=['Id'], inplace=True)",
+      "X = train_df.drop(columns=['SalePrice'])"
+    ],
+    "imports": [
+      "for col in train_df.columns:"
+    ]
+  },
+  "xgboost": {
+    "notebook": "c:\\Users\\Vaka Bela Jithendra\\OneDrive\\Desktop\\ML Algorithm Explorer\\Supervised Learning\\XGboostRegression\\podcast-listening-xgboost-regressor.ipynb",
+    "dataset": "train_df = pd.read_csv(\"/kaggle/input/playground-series-s5e4/train.csv\")",
+    "target": "y = train_df['Listening_Time_minutes']",
+    "features_dropped": [
+      "train_df.drop(columns=['id', 'Podcast_Name', 'Episode_Title'], inplace=True)",
+      "X = train_df.drop(columns=['Listening_Time_minutes'])"
+    ],
+    "imports": [
+      "for col in train_df.columns:",
+      "numeric_cols = train_df.select_dtypes(include=['float64', 'int64']).columns"
+    ]
+  }
+}
