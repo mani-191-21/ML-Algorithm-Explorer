@@ -1,164 +1,86 @@
-import joblib
-import pandas as pd
-import numpy as np
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import Dict, Any
-import uvicorn
-import os
+"""
+Main FastAPI application for ML-Algorithm-Explorer.
+Entry point for the backend server.
+"""
+
 import warnings
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
+
+from backend.config import (
+    API_TITLE,
+    API_VERSION,
+    API_DESCRIPTION,
+    API_DOCS_URL,
+    API_REDOC_URL,
+    CORS_ORIGINS,
+    CORS_ALLOW_CREDENTIALS,
+    CORS_ALLOW_METHODS,
+    CORS_ALLOW_HEADERS,
+    HOST,
+    PORT,
+    RELOAD,
+)
+from backend.api import router
+from backend.utils.logger import get_logger
+
+# Suppress warnings
 warnings.filterwarnings("ignore")
 
-from model_registry import ALGORITHM_REGISTRY
+logger = get_logger(__name__)
 
-app = FastAPI(title="MLVerse — Supervised Learning API")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+# Create FastAPI app
+app = FastAPI(
+    title=API_TITLE,
+    version=API_VERSION,
+    description=API_DESCRIPTION,
+    docs_url=API_DOCS_URL,
+    redoc_url=API_REDOC_URL,
 )
 
-BASE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Supervised Learning")
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=CORS_ALLOW_CREDENTIALS,
+    allow_methods=CORS_ALLOW_METHODS,
+    allow_headers=CORS_ALLOW_HEADERS,
+)
 
-pipelines: dict = {}
+# Include API routes
+app.include_router(router)
+
+
+@app.get("/", tags=["root"])
+async def root():
+    """Root endpoint with API information."""
+    return {
+        "message": API_TITLE,
+        "version": API_VERSION,
+        "docs": API_DOCS_URL,
+        "redoc": API_REDOC_URL,
+    }
 
 
 @app.on_event("startup")
-def load_models():
-    for key, cfg in ALGORITHM_REGISTRY.items():
-        pkl = cfg.get("pkl_path")
-        if pkl:
-            full_path = os.path.join(BASE_DIR, pkl)
-            try:
-                print(f"Loading {key} from {full_path} ...")
-                pipelines[key] = joblib.load(full_path)
-                print(f"  ✓ {key} loaded.")
-            except Exception as e:
-                print(f"  ✗ {key} failed: {e}")
+async def startup():
+    """Startup event handler."""
+    logger.info(f"Starting {API_TITLE} v{API_VERSION}")
+    logger.info(f"CORS origins: {CORS_ORIGINS}")
 
 
-# ── GET /models — full registry for frontend ────────────────────────────
-@app.get("/models")
-def get_models():
-    result = {}
-    for key, cfg in ALGORITHM_REGISTRY.items():
-        pipeline = pipelines.get(key)
-        features = {}
-
-        if isinstance(pipeline, dict):
-            fnames = pipeline.get('feature_names', [])
-            display = pipeline.get('feature_names_display', {})
-            le_dict = pipeline.get('label_encoders', {})
-
-            for fname in fnames:
-                label = display.get(fname, fname)
-                if fname in le_dict:
-                    le = le_dict[fname]
-                    features[fname] = {
-                        "label": label,
-                        "type": "select",
-                        "options": [str(c) for c in le.classes_],
-                        "default": str(le.classes_[0]),
-                    }
-                else:
-                    features[fname] = {
-                        "label": label,
-                        "type": "number",
-                        "default": 0,
-                    }
-        else:
-            # CatBoost/XGBoost pkl is raw model, use fallback features from registry
-            pass
-
-        result[key] = {
-            "name": cfg["name"],
-            "algorithm": cfg["algorithm"],
-            "dataset": cfg["dataset"],
-            "target": cfg["target"],
-            "loaded": key in pipelines,
-            "features": features,
-        }
-    return result
-
-
-# ── GET /chart-data/{model_id} — pre-computed chart data ────────────────
-@app.get("/chart-data/{model_id}")
-def get_chart_data(model_id: str):
-    if model_id not in pipelines:
-        raise HTTPException(status_code=404, detail=f"Model '{model_id}' not found")
-
-    pipeline = pipelines[model_id]
-    if isinstance(pipeline, dict) and 'chart_data' in pipeline:
-        return pipeline['chart_data']
-
-    return {"error": "No chart data available for this model"}
-
-
-# ── POST /predict — unified prediction ──────────────────────────────────
-class PredictionRequest(BaseModel):
-    model: str
-    data: Dict[str, Any]
-
-
-@app.post("/predict")
-def predict(request: PredictionRequest):
-    model_name = request.model
-
-    if model_name not in pipelines:
-        raise HTTPException(status_code=400, detail=f"Model '{model_name}' not loaded.")
-
-    pipeline = pipelines[model_name]
-
-    try:
-        if isinstance(pipeline, dict):
-            model = pipeline['model']
-            scaler = pipeline.get('scaler')
-            le_dict = pipeline.get('label_encoders', {})
-            fnames = pipeline.get('feature_names', [])
-
-            row = {}
-            for col in fnames:
-                val = request.data.get(col, 0)
-                if col in le_dict:
-                    le = le_dict[col]
-                    s = str(val)
-                    if s in list(le.classes_):
-                        row[col] = int(le.transform([s])[0])
-                    else:
-                        row[col] = 0
-                else:
-                    try:
-                        row[col] = float(val)
-                    except:
-                        row[col] = 0.0
-
-            df = pd.DataFrame([row])[fnames]
-
-            if scaler is not None:
-                X = scaler.transform(df)
-            else:
-                X = df.values
-
-            prediction = model.predict(X)
-            return {"prediction": round(float(prediction[0]), 4)}
-
-        else:
-            # Raw model (CatBoost/XGBoost legacy pkl)
-            df = pd.DataFrame([request.data])
-            prediction = pipeline.predict(df)
-            return {"prediction": round(float(prediction[0]), 4)}
-
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Prediction error: {str(exc)}")
-
-
-@app.get("/")
-def read_root():
-    return {"message": "MLVerse API", "total_models": len(ALGORITHM_REGISTRY)}
+@app.on_event("shutdown")
+async def shutdown():
+    """Shutdown event handler."""
+    logger.info("Shutting down application")
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    logger.info(f"Starting server on {HOST}:{PORT}")
+    uvicorn.run(
+        "backend.main:app",
+        host=HOST,
+        port=PORT,
+        reload=RELOAD,
+    )
