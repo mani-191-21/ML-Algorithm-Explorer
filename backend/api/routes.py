@@ -5,6 +5,7 @@ from typing import Dict, Any
 
 from backend.config import API_VERSION
 from backend.models import ModelLoader, ModelPredictor, ALGORITHM_REGISTRY
+from backend.models.registry import get_models_by_category_name, get_all_model_categories
 from backend.utils.logger import get_logger
 from backend.utils.exceptions import MLVerseException, ModelNotFoundError, PredictionError
 from .models import (
@@ -216,3 +217,67 @@ async def get_chart_data(
         return model['chart_data']
     
     return {"error": "No chart data available for this model"}
+
+
+@router.get("/categories")
+async def get_categories():
+    """
+    Get all available model categories.
+    
+    Returns:
+        List of model categories
+    """
+    categories = get_all_model_categories()
+    return {
+        "total_categories": len(categories),
+        "categories": categories,
+    }
+
+
+@router.get("/category/{category_name}")
+async def get_models_by_category(
+    category_name: str,
+    loader: ModelLoader = Depends(get_model_loader)
+):
+    """
+    Get all models in a specific category.
+    
+    Args:
+        category_name: Category name
+        loader: Model loader instance
+    
+    Returns:
+        Models in the category
+    """
+    models_in_category = get_models_by_category_name(category_name)
+    
+    if not models_in_category:
+        raise HTTPException(status_code=404, detail=f"Category '{category_name}' not found")
+    
+    result = {}
+    for model_id, config in models_in_category.items():
+        is_loaded = loader.is_loaded(model_id)
+        features = {}
+        
+        if is_loaded:
+            try:
+                predictor = get_model_predictor()
+                features = predictor.get_feature_info(model_id)
+            except Exception as e:
+                logger.warning(f"Could not get features for {model_id}: {str(e)}")
+        
+        result[model_id] = ModelInfo(
+            name=config["name"],
+            algorithm=config["algorithm"],
+            dataset=config["dataset"],
+            target=config["target"],
+            description=config.get("description"),
+            loaded=is_loaded,
+            features=features,
+        )
+    
+    return {
+        "category": category_name,
+        "total": len(result),
+        "models": result,
+    }
